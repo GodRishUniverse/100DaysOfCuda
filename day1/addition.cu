@@ -1,55 +1,50 @@
 #include <iostream>
 
-__global__ void add(int *a, int *b, int *c) {
-    int index = threadIdx.x;
+__global__
+void add(float *a, float *b, float *c) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
     c[index] = a[index] + b[index];
 }
 
-void printArray(int *array, int size) {
+void printArray(float *array, int size) {
     for (int i = 0; i < size; i++) {
         std::cout << array[i] << " ";
     }
     std::cout << std::endl;
 }
 
-void testAddition() {
-    int size = 10;
-    int *a, *b, *c;
-    cudaMallocManaged(&a, size * sizeof(int));
-    cudaMallocManaged(&b, size * sizeof(int));
-    cudaMallocManaged(&c, size * sizeof(int));
+void vectorAdd(float *a, float *b, float *c, int n) {
+    int size = n * sizeof(float);
 
-    // Initialize input arrays
-    for (int i = 0; i < size; i++) {
-        a[i] = i;
-        b[i] = i * 2;
-    }
+    float *d_a, *d_b, *d_c;
 
-    // Print input arrays
-    std::cout << "Array A: ";
-    printArray(a, size);
-    std::cout << "Array B: ";
-    printArray(b, size);
+    cudaMalloc(&d_a, size);
+    cudaMemcpy(d_a, a, size, cudaMemcpyHostToDevice); // Host to Device
+    cudaMalloc(&d_b, size);
+    cudaMemcpy(d_b, b, size, cudaMemcpyHostToDevice); // Host to Device
 
-    // Launch kernel
-    int blockSize = 256;
-    int numBlocks = (size + blockSize - 1) / blockSize;
-    add<<<numBlocks, blockSize>>>(a, b, c);
+    cudaMalloc(&d_c, size);
 
-    // Wait for kernel to finish
-    cudaDeviceSynchronize();
+    // kernel code
+    add<<<ceil(n / 256.0), 256>>>(d_a, d_b, d_c);
 
-    // Print result array
-    std::cout << "Array C (A + B): ";
-    printArray(c, size);
+    cudaMemcpy(c, d_c, size, cudaMemcpyDeviceToHost); // Device to Host
 
-    // Clean up
-    cudaFree(a);
-    cudaFree(b);
-    cudaFree(c);
+    cudaFree(d_a);
+    cudaFree(d_b);
+    cudaFree(d_c);
+
 }
 
+
 int main() {
-    testAddition();
+    float a[] = {1.f, 2.f, 3.f, 4.f};
+    float b[] = {5.f, 6.f, 7.f, 8.f};
+
+    float c[4];
+
+    vectorAdd(a, b, c, 4);
+
+    printArray(c, 4);
     return 0;
 }
