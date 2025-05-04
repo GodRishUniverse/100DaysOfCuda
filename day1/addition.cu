@@ -18,12 +18,24 @@ void vectorAdd(float *a, float *b, float *c, int n) {
 
     float *d_a, *d_b, *d_c;
 
-    cudaMalloc(&d_a, size);
+    cudaError_t err = cudaMalloc(&d_a, size);
+    if (err != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(err), __FILE__,__LINE__);
+        exit(EXIT_FAILURE);
+    }
     cudaMemcpy(d_a, a, size, cudaMemcpyHostToDevice); // Host to Device
-    cudaMalloc(&d_b, size);
+    err = cudaMalloc(&d_b, size);
+    if (err != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(err), __FILE__,__LINE__);
+        exit(EXIT_FAILURE);
+    }
     cudaMemcpy(d_b, b, size, cudaMemcpyHostToDevice); // Host to Device
 
-    cudaMalloc(&d_c, size);
+    err = cudaMalloc(&d_c, size);
+    if (err != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(err), __FILE__,__LINE__);
+        exit(EXIT_FAILURE);
+    }
 
     // kernel code
     add<<<ceil(n / 256.0), 256>>>(d_a, d_b, d_c);
