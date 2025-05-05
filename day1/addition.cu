@@ -18,7 +18,7 @@ void vectorAdd(float *a, float *b, float *c, int n) {
 
     float *d_a, *d_b, *d_c;
 
-    cudaError_t err = cudaMalloc(&d_a, size);
+    cudaError_t err = cudaMalloc((void **)&d_a, size);
     if (err != cudaSuccess) {
         printf("Error: %s\n", cudaGetErrorString(err), __FILE__,__LINE__);
         exit(EXIT_FAILURE);
