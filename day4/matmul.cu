@@ -46,8 +46,8 @@ void matmul(float *a, float *b, float *c, int m , int n, int k) {
     }
 
     // kernel code
-    dim3 dimGrid(32, 1,1);
-    dim3 dimBlock(32, 1,1);
+    dim3 dimBlock(16, 16);     // 256 threads per block
+    dim3 dimGrid((k+15)/16, (m+15)/16);  // enough blocks to cover m×k
     kernel_matmul<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, m, n, k);
 
     cudaMemcpy(c, d_c, size_c, cudaMemcpyDeviceToHost); // Device to Host
